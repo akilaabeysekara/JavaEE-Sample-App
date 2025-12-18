@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Form</title>
+</head>
+<body>
+<h1>Customer Form</h1>
+
+<div>
+    <input type="text" id="id" placeholder="Id"><br>
+    <input type="text" id="name" placeholder="Name"><br>
+    <input type="text" id="address" placeholder="Address"><br>
+    <button id="saveBtn">Save</button>
+    <button id="updateBtn">Update</button>
+    <button id="clearBtn">Clear</button>
+</div>
+
+<h2>Customer Table</h2>
+<table border="1" width="400">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="tbl"></tbody>
+</table>
+
+<script src="jquery-3.7.1.min.js"></script>
+
+<script>
+    const URL = "http://localhost:8080/Day_02_Sample_App_Web_exploded/customer";
+
+    // POST customer
+    $('#saveBtn').on('click', function () {
+        $.ajax({
+            url: URL,
+            method: "POST",
+            data: {
+                id: $('#id').val(),
+                name: $('#name').val(),
+                address: $('#address').val()
+            },
+            success: function (res) {
+                alert("Customer Saved!");
+                clearForm();
+                loadCustomers();
+            },
+            error: function () {
+                alert("Error saving customer");
+            }
+        });
+    });
+
+    // Update customer
+    $('#updateBtn').on('click', function () {
+        let id = $('#id').val();
+        let name = $('#name').val();
+        let address = $('#address').val();
+
+        $.ajax({
+            url: URL + "?id=" + id,
+            method: "PUT",
+            data: {
+                id: id,
+                name: name,
+                address: address
+            },
+            success: function (res) {
+                alert("Customer Updated!");
+                let row = $(`#tbl tr:has(td:contains('${id}'))`);
+                row.find('td:eq(1)').text(name);
+                row.find('td:eq(2)').text(address);
+                clearForm();
+            },
+            error: function () {
+                alert("Error updating customer");
+            }
+        });
+    });
+
+    // DELETE customer
+    function deleteCustomer(id) {
+        if (confirm('Are you sure you want to delete this customer?')) {
+            $.ajax({
+                url: URL + "?id=" + id,
+                method: "DELETE",
+                success: function (res) {
+                    alert("Customer Deleted!");
+                    loadCustomers();
+                },
+                error: function () {
+                    alert("Error deleting customer");
+                }
+            });
+        }
+    }
+
+    // GET customer list
+    function loadCustomers() {
+        $.ajax({
+            url: URL,
+            method: "GET",
+            success: function (res) {
+                console.log(res);
+
+                let arr = typeof res === "string" ? JSON.parse(res) : res;
+
+                $('#tbl').empty();
+                arr.forEach(c => {
+                    $('#tbl').append(`
+                        <tr>
+                            <td>${c.id}</td>
+                            <td>${c.name}</td>
+                            <td>${c.address}</td>
+                            <td>
+                                <button onclick="loadCustomer('${c.id}','${c.name}','${c.address}')">Edit</button>
+                                <button onclick="deleteCustomer('${c.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function () {
+                alert("Error loading customers");
+            }
+        });
+    }
+
+    // Load customer data to form
+    function loadCustomer(id, name, address) {
+        $('#id').val(id);
+        $('#name').val(name);
+        $('#address').val(address);
+    }
+
+    // Clear form
+    function clearForm() {
+        $('#id').val('');
+        $('#name').val('');
+        $('#address').val('');
+    }
+
+    $('#clearBtn').on('click', clearForm);
+
+    // Load table when page opens
+    loadCustomers();
+</script>
+</body>
+</html>

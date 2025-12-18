@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="navigation">
+    <button onclick="window.location.href='Customer.html'">Customer</button>
+    <button onclick="window.location.href='Item.html'">Item</button>
+    <button onclick="window.location.href='Order.html'">Order</button>
+    <button onclick="window.location.href='../index.html'">Home</button>
+</div>
+<h1>Customer</h1>
+<div id="customer-data">
+    <input type="text" id="customer-id" placeholder="Customer Id"><br>
+    <input type="text" id="customer-name" placeholder="Customer Name"><br>
+    <input type="text" id="customer-address" placeholder="Customer Address"><br>
+    <button onclick="saveCustomer()">Save</button>
+    <button onclick="updateCustomer()">Update</button>
+    <button onclick="deleteCustomer()">Delete</button>
+</div>
+<div id="customers">
+    <table id="customer-table">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Customer Name</th>
+            <th>Customer Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</div>
+<script src="../assests/js/jquery-3.7.1.min.js"></script>
+<script>
+    function saveCustomer() {
+        var cid = $("#customer-id").val();
+        var cname = $("#customer-name").val();
+        var caddress = $("#customer-address").val();
+        // ajax request for this alert("Customer Saved" + cid + cname + caddress);
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/customer",
+            contentType: "application/json",
+            data: JSON.stringify({cid: cid, cname: cname, caddress: caddress}),
+            success: function (response) {
+                alert("Customer Saved Successfully");
+                getALLCustomers();
+            }, error: function (error) {
+                alert("Error saving customer");
+                console.log(error);
+            }
+        })
+
+    }
+
+    function updateCustomer() {
+        var cid = $("#customer-id").val();
+        var cname = $("#customer-name").val();
+        var caddress = $("#customer-address").val();
+
+        $.ajax({
+            type: "PUT",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/customer",
+            contentType: "application/json",
+            data: JSON.stringify({cid: cid, cname: cname, caddress: caddress}),
+            success: function (response) {
+                alert("Customer Updated Successfully");
+                getALLCustomers();
+            },
+            error: function (error) {
+                alert("Error updating customer");
+                console.log(error);
+            }
+        });
+    }
+
+    function deleteCustomer() {
+        var cid = $("#customer-id").val();
+        $.ajax({
+            type: "DELETE",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/customer?id=" + cid,
+            success: function (response) {
+                alert("Customer Deleted Successfully");
+                getALLCustomers();
+            },
+            error: function (error) {
+                alert("Error deleting customer");
+                console.log(error);
+            }
+        });
+    }
+
+    function getALLCustomers() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/customer",
+            success: function (response) {
+                $("#customer-table tbody").html("");
+                $.each(response, function (index, customer) {
+                    $("#customer-table tbody").append("<tr><td>" + customer.id + "</td><td>" + customer.name + "</td><td>" + customer.address + "</td></tr>");
+                })
+            }, error: function (error) {
+                alert("Error loading customers");
+                console.log(error);
+            }
+        })
+    }
+
+    $(document).ready(function () {
+        getALLCustomers();
+    });
+</script>
+</body>
+</html>

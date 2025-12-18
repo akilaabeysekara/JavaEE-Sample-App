@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Form</title>
+</head>
+<body>
+<h1>Customer Form</h1>
+
+<div>
+    <input type="text" id="id" placeholder="Id"><br>
+    <input type="text" id="name" placeholder="Name"><br>
+    <input type="text" id="address" placeholder="Address"><br>
+    <button id="saveBtn">Save</button>
+    <button id="updateBtn">Update</button>
+    <button id="clearBtn">Clear</button>
+</div>
+
+<h2>Customer Table</h2>
+<table border="1" width="600">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="tbl"></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    // adjust this to your deployed path
+    const URL = "http://localhost:8080/Day_02_Sample_App_Web_exploded/customer";
+
+    // POST customer
+    $('#saveBtn').on('click', function () {
+        const payload = {
+            id: $('#id').val().trim(),
+            name: $('#name').val().trim(),
+            address: $('#address').val().trim()
+        };
+
+        if (!payload.id) {
+            alert("Id is required");
+            return;
+        }
+
+        $.ajax({
+            url: URL,
+            method: "POST",
+            data: payload,
+            success: function (res) {
+                alert("Customer Saved!");
+                clearForm();
+                loadCustomers();
+            },
+            error: function (xhr) {
+                alert("Error saving customer: " + (xhr.responseText || xhr.status));
+            }
+        });
+    });
+
+    // Update customer
+    $('#updateBtn').on('click', function () {
+        let id = $('#id').val().trim();
+        let name = $('#name').val().trim();
+        let address = $('#address').val().trim();
+
+        if (!id) {
+            alert("Id is required to update");
+            return;
+        }
+
+        // put parameters in query string to guarantee servlet.getParameter() can read them
+        const qs = `?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`;
+
+        $.ajax({
+            url: URL + qs,
+            method: "PUT",
+            success: function (res) {
+                alert("Customer Updated!");
+                // update UI row if exists
+                loadCustomers();
+                clearForm();
+            },
+            error: function (xhr) {
+                alert("Error updating customer: " + (xhr.responseText || xhr.status));
+            }
+        });
+    });
+
+    // DELETE customer
+    function deleteCustomer(id) {
+        if (!confirm('Are you sure you want to delete this customer?')) return;
+
+        $.ajax({
+            url: URL + "?id=" + encodeURIComponent(id),
+            method: "DELETE",
+            success: function (res) {
+                alert("Customer Deleted!");
+                loadCustomers();
+            },
+            error: function (xhr) {
+                alert("Error deleting customer: " + (xhr.responseText || xhr.status));
+            }
+        });
+    }
+
+    // GET customer list
+    function loadCustomers() {
+        $.ajax({
+            url: URL,
+            method: "GET",
+            success: function (res) {
+                let arr = typeof res === "string" ? JSON.parse(res) : res;
+                $('#tbl').empty();
+                arr.forEach(c => {
+                    $('#tbl').append(`
+                        <tr>
+                            <td>${escapeHtml(c.id)}</td>
+                            <td>${escapeHtml(c.name)}</td>
+                            <td>${escapeHtml(c.address)}</td>
+                            <td>
+                                <button onclick="loadCustomer('${escapeJs(c.id)}','${escapeJs(c.name)}','${escapeJs(c.address)}')">Edit</button>
+                                <button onclick="deleteCustomer('${escapeJs(c.id)}')">Delete</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function (xhr) {
+                alert("Error loading customers: " + (xhr.responseText || xhr.status));
+            }
+        });
+    }
+
+    // Load customer data to form
+    function loadCustomer(id, name, address) {
+        $('#id').val(id);
+        $('#name').val(name);
+        $('#address').val(address);
+    }
+
+    // Clear form
+    function clearForm() {
+        $('#id').val('');
+        $('#name').val('');
+        $('#address').val('');
+    }
+
+    $('#clearBtn').on('click', clearForm);
+
+    // small helpers to escape output in the table
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+    // for embedding into onclick single-quoted JS strings
+    function escapeJs(s) {
+        if (!s) return '';
+        return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    // Load table when page opens
+    $(document).ready(function () {
+        loadCustomers();
+    });
+</script>
+</body>
+</html>
