@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<h1>Welcome to Akila Abeysekara Page</h1>
+<p>This is a sample HTML document.</p>
+<button id="btn" type="button">Click Me</button>
+
+<div id="posts"></div>
+
+<script src="jquery-3.7.1.min.js"></script>
+
+<script>
+    $('#btn').on('click', function() {
+        $.ajax({
+            url: 'http://localhost:8080/Day_01_Web_exploded/customer',
+            method: 'GET',
+            success: function(response) {
+                console.log(response);
+
+                alert(response);
+
+
+            },
+            error: function() {
+                console.error('Error fetching data');
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

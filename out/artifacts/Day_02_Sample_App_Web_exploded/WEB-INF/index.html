@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Form</title>
+</head>
+<body>
+<h1>Customer Form</h1>
+
+<div>
+    <input type="text" id="id" placeholder="Id"><br>
+    <input type="text" id="name" placeholder="Name"><br>
+    <input type="text" id="address" placeholder="Address"><br>
+    <button id="saveBtn">Save</button>
+</div>
+
+<h2>Customer Table</h2>
+<table border="1" width="400">
+    <thead>
+    <tr>
+        <th>ID</th><th>Name</th><th>Address</th>
+    </tr>
+    </thead>
+    <tbody id="tbl"></tbody>
+</table>
+
+<script src="jquery-3.7.1.min.js"></script>
+
+<script>
+    const URL = "http://localhost:8080/Day_02_Sample_App_Web_exploded/customer";
+
+    // POST customer
+    $('#saveBtn').on('click', function () {
+        $.ajax({
+            url: URL,
+            method: "POST",
+            data: {
+                id: $('#id').val(),
+                name: $('#name').val(),
+                address: $('#address').val()
+            },
+            success: function (res) {
+                alert("Customer Saved!");
+                loadCustomers();
+            },
+            error: function () {
+                alert("Error saving customer");
+            }
+        });
+    });
+
+    // GET customer list
+    function loadCustomers() {
+        $.ajax({
+            url: URL,
+            method: "GET",
+            success: function (res) {
+                console.log(res);
+
+                let arr = typeof res === "string" ? JSON.parse(res) : res;
+
+                $('#tbl').empty();
+                arr.forEach(c => {
+                    $('#tbl').append(`
+                        <tr>
+                            <td>${c.id}</td>
+                            <td>${c.name}</td>
+                            <td>${c.address}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function () {
+                alert("Error loading customers");
+            }
+        });
+    }
+
+    // Load table when page opens
+    loadCustomers();
+</script>
+</body>
+</html>
