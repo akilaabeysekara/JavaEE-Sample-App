@@ -13,5 +13,171 @@
 </div>
 <h1>Order</h1>
 
+<div id="order-data">
+    <input type="text" id="order-id" placeholder="Order ID"><br>
+    <select id="customer-select">
+        <option value="">Select Customer</option>
+    </select><br>
+    <select id="item-select">
+        <option value="">Select Item</option>
+    </select><br>
+    <input type="number" id="order-qty" placeholder="Quantity"><br>
+    <button onclick="saveOrder()">Save Order</button>
+    <button onclick="updateOrder()">Update Order</button>
+    <button onclick="deleteOrder()">Delete Order</button>
+</div>
+
+<div id="orders">
+    <table id="order-table">
+        <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script src="../assests/js/jquery-3.7.1.min.js"></script>
+<script>
+    let items = [];
+    let customers = [];
+
+    function loadCustomers() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/customer",
+            success: function (response) {
+                customers = response;
+                $("#customer-select").html("<option value=''>Select Customer</option>");
+                $.each(response, function (index, customer) {
+                    $("#customer-select").append("<option value='" + customer.id + "'>" + customer.name + "</option>");
+                });
+            }
+        });
+    }
+
+    function loadItems() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/item",
+            success: function (response) {
+                items = response;
+                $("#item-select").html("<option value=''>Select Item</option>");
+                $.each(response, function (index, item) {
+                    $("#item-select").append("<option value='" + item.code + "'>" + item.name + "</option>");
+                });
+            }
+        });
+    }
+
+    function saveOrder() {
+        var orderId = $("#order-id").val();
+        var customerId = $("#customer-select").val();
+        var itemCode = $("#item-select").val();
+        var qty = $("#order-qty").val();
+
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/order",
+            contentType: "application/json",
+            data: JSON.stringify({
+                orderId: orderId,
+                customerId: customerId,
+                itemCode: itemCode,
+                qty: qty
+            }),
+            success: function (response) {
+                alert("Order Saved Successfully");
+                getAllOrders();
+            },
+            error: function (error) {
+                alert("Error saving order");
+                console.log(error);
+            }
+        });
+    }
+
+    function updateOrder() {
+        var orderId = $("#order-id").val();
+        var customerId = $("#customer-select").val();
+        var itemCode = $("#item-select").val();
+        var qty = $("#order-qty").val();
+
+        $.ajax({
+            type: "PUT",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/order",
+            contentType: "application/json",
+            data: JSON.stringify({
+                orderId: orderId,
+                customerId: customerId,
+                itemCode: itemCode,
+                qty: qty
+            }),
+            success: function (response) {
+                alert("Order Updated Successfully");
+                getAllOrders();
+            },
+            error: function (error) {
+                alert("Error updating order");
+                console.log(error);
+            }
+        });
+    }
+
+    function deleteOrder() {
+        var orderId = $("#order-id").val();
+        $.ajax({
+            type: "DELETE",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/order?id=" + orderId,
+            success: function (response) {
+                alert("Order Deleted Successfully");
+                getAllOrders();
+            },
+            error: function (error) {
+                alert("Error deleting order");
+                console.log(error);
+            }
+        });
+    }
+
+    function getAllOrders() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/Day_04_POS_Backend_Web_exploded/api/v1/order",
+            success: function (response) {
+                $("#order-table tbody").html("");
+                $.each(response, function (index, order) {
+                    let item = items.find(i => i.code === order.itemCode);
+                    let customer = customers.find(c => c.id === order.customerId);
+                    let price = item ? item.price * order.qty : 0;
+                    $("#order-table tbody").append(
+                        "<tr><td>" + order.orderId + "</td><td>" +
+                        (customer ? customer.name : order.customerId) + "</td><td>" +
+                        (item ? item.name : order.itemCode) + "</td><td>" +
+                        order.qty + "</td><td>" +
+                        price + "</td></tr>"
+                    );
+                });
+            },
+            error: function (error) {
+                alert("Error loading orders");
+                console.log(error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadCustomers();
+        loadItems();
+        getAllOrders();
+    });
+</script>
+
 </body>
 </html>
